@@ -1,0 +1,28 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=2097
+
+*narrow* is a Vim plugin to emulate Emacs' narrowing feature.
+From GNU Emacs Manual:
+
+	Narrowing means focusing in on some portion of the buffer, making the
+	rest temporarily inaccessible. The portion which you can still get to
+	is called the accessible portion. Canceling the narrowing, which makes
+	the entire buffer once again accessible, is called widening. The
+	bounds of narrowing in effect in a buffer are called the buffer's
+	restriction.
+
+	Narrowing can make it easier to concentrate on a single subroutine or
+	paragraph by eliminating clutter. It can also be used to limit the
+	range of operation of a replace command or repeating keyboard macro.
+
+Note that there are some differences from the original behavior.
+See |narrow-bugs| for the detail.
+
+
+Requirements:
+- Vim 7.0 or later
+
+Latest version:
+http://github.com/kana/vim-narrow
+
+Document in HTML format:
+http://kana.github.com/config/vim/narrow.html
