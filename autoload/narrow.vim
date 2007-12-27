@@ -1,8 +1,8 @@
 " narrow - Emulate Emacs' narrowing feature
-" Version: 0.0
+" Version: 0.1
 " Copyright (C) 2007 kana <http://nicht.s8.xrea.com/>
 " License: MIT license (see <http://www.opensource.org/licenses/mit-license>)
-" $Id: /local/svn-repos/config/trunk/vim/dot.vim/autoload/narrow.vim 1118 2007-12-15T18:19:49.166443Z kana  $
+" $Id: /local/svn-repos/config/trunk/vim/dot.vim/autoload/narrow.vim 1240 2007-12-27T17:54:20.007798Z kana  $
 " Interfaces  "{{{1
 " MEMO: narrow-to-motion: v{motion}:Narrow<Return>
 
@@ -10,11 +10,15 @@ function! narrow#Narrow(line1, line2)
   " Note that if you want to modify more options, don't forget to update
   " s:save_the_state_of_buffer() and s:load_the_state_of_buffer().
   if exists('b:narrow_original_state')
-    echo 'The buffer is already narrowed.'
-    return 0
+    if !s:allow_overridingp()
+      echo 'The buffer is already narrowed.'
+      return 0
+    endif
+  else
+    let b:narrow_original_state = s:save_the_state_of_buffer()
   endif
 
-  let b:narrow_original_state = s:save_the_state_of_buffer()
+  setlocal foldenable
   setlocal foldmethod=manual
   setlocal foldtext=''
   call s:adjust_cursor_if_invoked_via_visual_mode(a:line1, a:line2)
@@ -23,7 +27,6 @@ function! narrow#Narrow(line1, line2)
     call s:fold_before(a:line1)
     call s:fold_after(a:line2)
   call setpos('.', pos)
-  echo mode()
   return 1
 endfunction
 
@@ -36,9 +39,12 @@ function! narrow#Widen()
     return 0
   endif
 
-  call s:clear_all_folds()
-  call s:load_the_state_of_buffer(b:narrow_original_state)
-  unlet b:narrow_original_state
+  let pos = getpos('.')
+    call s:clear_all_folds()
+    call s:load_the_state_of_buffer(b:narrow_original_state)
+    unlet b:narrow_original_state
+  call setpos('.', pos)
+  normal! zz
   return 1
 endfunction
 
@@ -50,6 +56,13 @@ endfunction
 
 
 " Misc.  "{{{1
+function! s:allow_overridingp()  "{{{2
+  return exists('g:narrow_allow_overridingp') && g:narrow_allow_overridingp
+endfunction
+
+
+
+
 function! s:adjust_cursor_if_invoked_via_visual_mode(line1, line2)  "{{{2
   " Without this adjustment, the cursor is always positioned at '<.
   " BUGS: this discriminant isn't perfect but sufficient.
@@ -122,6 +135,7 @@ function! s:save_the_state_of_buffer()  "{{{2
   call s:restore_view_options()
 
   let original_state = {}
+  let original_state.foldenable = &l:foldenable
   let original_state.foldmethod = &l:foldmethod
   let original_state.foldtext = &l:foldtext
   return original_state
@@ -135,6 +149,7 @@ function! s:load_the_state_of_buffer(original_state)  "{{{2
   loadview
   call s:restore_view_options()
 
+  let &l:foldenable = a:original_state.foldenable
   let &l:foldmethod = a:original_state.foldmethod
   let &l:foldtext = a:original_state.foldtext
 endfunction

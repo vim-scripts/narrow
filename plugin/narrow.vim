@@ -1,8 +1,8 @@
 " narrow - Emulate Emacs' narrowing feature
-" Version: 0.0
+" Version: 0.1
 " Copyright (C) 2007 kana <http://nicht.s8.xrea.com/>
 " License: MIT license (see <http://www.opensource.org/licenses/mit-license>)
-" $Id: /local/svn-repos/config/trunk/vim/dot.vim/plugin/narrow.vim 1113 2007-12-15T17:21:25.833596Z kana  $
+" $Id: /local/svn-repos/config/trunk/vim/dot.vim/plugin/narrow.vim 1238 2007-12-27T16:21:52.484160Z kana  $
 
 if exists('g:loaded_narrow')
   finish
