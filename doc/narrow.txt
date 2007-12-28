@@ -1,9 +1,9 @@
 *narrow.txt*	Emulate Emacs' narrowing feature
 
-Version 0.1
+Version 0.2
 Copyright (C) 2007 kana <http://nicht.s8.xrea.com/>
 License: MIT license (see <http://www.opensource.org/licenses/mit-license>)
-$Id: /local/svn-repos/config/trunk/vim/dot.vim/doc/narrow.txt 1240 2007-12-27T17:54:20.007798Z kana  $
+$Id: /local/svn-repos/config/trunk/vim/dot.vim/doc/narrow.txt 1272 2007-12-28T23:18:03.797002Z kana  $
 
 
 
@@ -80,19 +80,18 @@ BUGS						*narrow-bugs*
   * Modify the content of a hidden portion by |:s| or other commands.
   In Emacs, these actions aren't allowed.
 
-- This plugin uses |:mkview| to save the current state of a buffer for
-  |:Widen|, and and |:mkview| writes a file.  So this plugin may be confused
-  when there are two or more Vim processes and they narrow/widen the same
-  buffers.
-
-- Temporary files written by |:mkview| will be created in the "narrow"
-  subdirectory in 'viewdir'.  For example, "~/.vim/view/narrow".
-
 
 
 
 ==============================================================================
 CHANGELOG					*narrow-changelog*
+
+0.2	2007-12-29T07:24:53+09:00
+	- Fix |:Narrow| and |:Widen| not to use temporary files.  Now |:Widen|
+	  correctly works even if the target buffer is |:Narrow|'ed by two or
+	  more Vim processes.
+	- Modify |:Narrow| to |zz| after narrowing for visibility.
+	- Modify |:Narrow| to include all lines of closed folds in [range].
 
 0.1	2007-12-28T01:13:48+09:00
 	- Fix the bug that 'foldenable' is not set after |:Narrow|.

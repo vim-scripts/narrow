@@ -1,8 +1,8 @@
 " narrow - Emulate Emacs' narrowing feature
-" Version: 0.1
+" Version: 0.2
 " Copyright (C) 2007 kana <http://nicht.s8.xrea.com/>
 " License: MIT license (see <http://www.opensource.org/licenses/mit-license>)
-" $Id: /local/svn-repos/config/trunk/vim/dot.vim/autoload/narrow.vim 1240 2007-12-27T17:54:20.007798Z kana  $
+" $Id: /local/svn-repos/config/trunk/vim/dot.vim/autoload/narrow.vim 1272 2007-12-28T23:18:03.797002Z kana  $
 " Interfaces  "{{{1
 " MEMO: narrow-to-motion: v{motion}:Narrow<Return>
 
@@ -18,15 +18,19 @@ function! narrow#Narrow(line1, line2)
     let b:narrow_original_state = s:save_the_state_of_buffer()
   endif
 
+  let line1 = s:normalize_line(a:line1, 'head')
+  let line2 = s:normalize_line(a:line2, 'tail')
+
   setlocal foldenable
   setlocal foldmethod=manual
   setlocal foldtext=''
-  call s:adjust_cursor_if_invoked_via_visual_mode(a:line1, a:line2)
+  call s:adjust_cursor_if_invoked_via_visual_mode(line1, line2)
   let pos = getpos('.')
     call s:clear_all_folds()
-    call s:fold_before(a:line1)
-    call s:fold_after(a:line2)
+    call s:fold_before(line1)
+    call s:fold_after(line2)
   call setpos('.', pos)
+  normal! zz
   return 1
 endfunction
 
@@ -76,6 +80,16 @@ endfunction
 
 
 
+function! s:normalize_line(line, mode)  "{{{2
+  " Return the first/last line number of a closed fold if a:line is contained
+  " the fold, otherwise return a:line as is.
+  let pline = (a:mode ==# 'head' ? foldclosed(a:line) : foldclosedend(a:line))
+  return 0 < pline ? pline : a:line
+endfunction
+
+
+
+
 function! s:fold_before(line)  "{{{2
   if 1 < a:line
     execute '1,' (a:line - 1) 'fold'
@@ -105,39 +119,32 @@ endfunction
 
 
 
-" view options  "{{{2
-function! s:set_view_options()
-  let s:original_viewdir = &viewdir
-  let &viewdir = s:original_viewdir . '/narrow'
-  let s:original_viewoptions = &viewoptions
-  let &viewoptions = 'folds'
-endfunction
-
-function! s:restore_view_options()
-  let &viewdir = s:original_viewdir
-  let &viewoptions = s:original_viewoptions
-endfunction
-
-
-
-
 function! s:save_the_state_of_buffer()  "{{{2
-  call s:set_view_options()
-    " BUGS: :mkview doesn't create intermediate directories.
-    if !isdirectory(&viewdir)
-      call mkdir(&viewdir, 'p', 0700)
-    endif
-    " BUGS: :mkview doesn't save folds info when &l:buftype isn't ''.
-    let original_buftype = &l:buftype
-    let &l:buftype = ''
-      mkview
-    let &l:buftype = original_buftype
-  call s:restore_view_options()
-
   let original_state = {}
   let original_state.foldenable = &l:foldenable
   let original_state.foldmethod = &l:foldmethod
   let original_state.foldtext = &l:foldtext
+
+  " save folds
+  let original_state.foldstate = []
+  let original_pos = getpos('.')
+  let line = 1
+  while line <= line('$')
+    if 0 < foldclosed(line)  " is the first line of a fold?
+      call add(original_state.foldstate, line)
+      let line = foldclosedend(line) + 1
+    else
+      let previous_line = line
+      call cursor(previous_line, 0)
+      normal! zj
+      let line = line('.')
+      if line == previous_line
+        break  " no more folds.
+      endif
+    endif
+  endwhile
+  call setpos('.', original_pos)
+
   return original_state
 endfunction
 
@@ -145,13 +152,16 @@ endfunction
 
 
 function! s:load_the_state_of_buffer(original_state)  "{{{2
-  call s:set_view_options()
-  loadview
-  call s:restore_view_options()
-
   let &l:foldenable = a:original_state.foldenable
   let &l:foldmethod = a:original_state.foldmethod
   let &l:foldtext = a:original_state.foldtext
+
+  " restore folds.
+  %foldopen!
+  for line in a:original_state.foldstate
+    call cursor(line, 0)
+    foldclose
+  endfor
 endfunction
 
 
