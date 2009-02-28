@@ -1,8 +1,26 @@
 " narrow - Emulate Emacs' narrowing feature
-" Version: 0.2
-" Copyright (C) 2007 kana <http://nicht.s8.xrea.com/>
-" License: MIT license (see <http://www.opensource.org/licenses/mit-license>)
-" $Id: /local/svn-repos/config/trunk/vim/dot.vim/autoload/narrow.vim 1272 2007-12-28T23:18:03.797002Z kana  $
+" Version: 0.2.1
+" Copyright (C) 2007 kana <http://whileimautomaton.net/>
+" License: MIT license  {{{
+"     Permission is hereby granted, free of charge, to any person obtaining
+"     a copy of this software and associated documentation files (the
+"     "Software"), to deal in the Software without restriction, including
+"     without limitation the rights to use, copy, modify, merge, publish,
+"     distribute, sublicense, and/or sell copies of the Software, and to
+"     permit persons to whom the Software is furnished to do so, subject to
+"     the following conditions:
+"
+"     The above copyright notice and this permission notice shall be included
+"     in all copies or substantial portions of the Software.
+"
+"     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+"     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+"     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+"     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+"     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+"     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+"     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+" }}}
 " Interfaces  "{{{1
 " MEMO: narrow-to-motion: v{motion}:Narrow<Return>
 
@@ -23,6 +41,7 @@ function! narrow#Narrow(line1, line2)
 
   setlocal foldenable
   setlocal foldmethod=manual
+  setlocal foldminlines=0  " to completely hide non-narrowed lines
   setlocal foldtext=''
   call s:adjust_cursor_if_invoked_via_visual_mode(line1, line2)
   let pos = getpos('.')
@@ -123,6 +142,7 @@ function! s:save_the_state_of_buffer()  "{{{2
   let original_state = {}
   let original_state.foldenable = &l:foldenable
   let original_state.foldmethod = &l:foldmethod
+  let original_state.foldminlines = &l:foldminlines
   let original_state.foldtext = &l:foldtext
 
   " save folds
@@ -154,14 +174,17 @@ endfunction
 function! s:load_the_state_of_buffer(original_state)  "{{{2
   let &l:foldenable = a:original_state.foldenable
   let &l:foldmethod = a:original_state.foldmethod
+  let &l:foldminlines = a:original_state.foldminlines
   let &l:foldtext = a:original_state.foldtext
 
   " restore folds.
-  %foldopen!
-  for line in a:original_state.foldstate
-    call cursor(line, 0)
-    foldclose
-  endfor
+  if 0 < len(a:original_state.foldstate)
+    %foldopen!  " This raises an error if there is no fold to open.
+    for line in a:original_state.foldstate
+      call cursor(line, 0)
+      foldclose
+    endfor
+  endif
 endfunction
 
 
